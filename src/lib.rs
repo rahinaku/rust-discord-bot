@@ -37,7 +37,7 @@ async fn add_headers(req: Request<Body>, next: Next) -> Response {
 pub fn get_app() -> Router {
     // Discord関連のルート（署名検証付き）
     let discord_routes = Router::new()
-        .route("/webhook", post(ping_handler))
+        .route("/", post(ping_handler))
         .layer(axum_middleware::from_fn(verify_discord_signature));
 
     // 公開ルート（署名検証なし）
@@ -62,8 +62,8 @@ pub mod test_utils {
     /// テスト用の固定鍵ペアを生成
     pub fn get_test_keypair() -> (SigningKey, String) {
         let signing_key = SigningKey::from_bytes(&[
-            157, 97, 177, 157, 239, 253, 90, 96, 186, 132, 74, 244, 146, 236, 44, 196, 68, 73,
-            197, 105, 123, 50, 105, 25, 112, 59, 172, 3, 28, 174, 127, 96,
+            157, 97, 177, 157, 239, 253, 90, 96, 186, 132, 74, 244, 146, 236, 44, 196, 68, 73, 197,
+            105, 123, 50, 105, 25, 112, 59, 172, 3, 28, 174, 127, 96,
         ]);
         let verifying_key = signing_key.verifying_key();
         let public_key_hex = hex::encode(verifying_key.to_bytes());
