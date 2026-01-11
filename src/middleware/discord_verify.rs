@@ -151,34 +151,59 @@ mod tests {
     mod verify_discord_signature {
         use super::*;
         use serial_test::serial;
+        use http_body_util::StreamBody;
+        use http_body::Frame;
+        use futures_util::{stream, StreamExt};
+        use std::io;
+        use crate::test_utils::{get_test_keypair, create_discord_signature, get_current_timestamp};
+
+        #[tokio::test]
+        async fn body_read_error() {
+            // エラーを返すストリームを作成
+            let error_stream = stream::once(async {
+                Err::<Frame<bytes::Bytes>, io::Error>(io::Error::new(
+                    io::ErrorKind::Other,
+                    "Body read error",
+                ))
+            });
+
+            let error_body = StreamBody::new(error_stream.map(|result| {
+                result.map_err(|e| axum::Error::new(e))
+            }));
+
+            // ルーターを構築
+            let app = Router::new()
+                .route("/", post(test_handler))
+                .layer(middleware::from_fn(verify_discord_signature));
+
+            // リクエストを構築（エラーを返すBody）
+            let request = Request::builder()
+                .method("POST")
+                .uri("/")
+                .header("x-signature-ed25519", "0".repeat(128))
+                .header("x-signature-timestamp", "1234567890")
+                .body(Body::new(error_body))
+                .unwrap();
+
+            let response = app.oneshot(request).await.unwrap();
+            assert_eq!(response.status(), StatusCode::BAD_REQUEST);
+        }
 
         #[tokio::test]
         #[serial]
         async fn success_with_valid_signature() {
             // テスト用の鍵ペアを生成
-            let signing_key = SigningKey::from_bytes(&[
-                157, 97, 177, 157, 239, 253, 90, 96, 186, 132, 74, 244, 146, 236, 44, 196, 68, 73,
-                197, 105, 123, 50, 105, 25, 112, 59, 172, 3, 28, 174, 127, 96,
-            ]);
-            let verifying_key = signing_key.verifying_key();
-            let public_key_hex = hex::encode(verifying_key.to_bytes());
+            let (signing_key, public_key_hex) = get_test_keypair();
 
             // 環境変数をセット
             unsafe { env::set_var("DISCORD_PUBLIC_KEY", &public_key_hex) };
 
             // テストデータ
-            let current_time = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_secs();
-            let timestamp = current_time.to_string();
+            let timestamp = get_current_timestamp();
             let body = b"{\"type\":1}";
 
-            // メッセージを構築して署名を生成
-            let mut message = timestamp.as_bytes().to_vec();
-            message.extend_from_slice(body);
-            let signature = signing_key.sign(&message);
-            let signature_hex = hex::encode(signature.to_bytes());
+            // 署名を生成
+            let signature_hex = create_discord_signature(&signing_key, &timestamp, body);
 
             // ルーターを構築
             let app = Router::new()
@@ -525,6 +550,27 @@ mod tests {
             );
             assert!(result.is_err());
             assert!(result.unwrap_err().contains("Invalid public key length"));
+        }
+
+        #[test]
+        fn invalid_public_key_value() {
+            let signature_hex = "a".repeat(128);
+            let timestamp = "1234567890";
+            let body = b"{\"type\":1}";
+            // 32バイトだが無効なEd25519公開鍵
+            // この値はEdwards曲線上の点としてデコードできない
+            let invalid_public_key_hex =
+                "efffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7f";
+
+            let result = super::super::verify_signature(
+                &signature_hex,
+                timestamp,
+                body,
+                &invalid_public_key_hex,
+            );
+            assert!(result.is_err());
+            // VerifyingKey::from_bytesでエラーが発生（88行目をカバー）
+            assert!(result.unwrap_err().contains("Invalid public key"));
         }
 
         #[test]
