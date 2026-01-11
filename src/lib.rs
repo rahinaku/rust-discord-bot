@@ -1,16 +1,18 @@
 pub mod controller;
+pub mod middleware;
 
 use axum::{
     Router,
     body::Body,
     http::{HeaderValue, Request},
-    middleware::{self, Next},
+    middleware::{self as axum_middleware, Next},
     response::Html,
     response::Response,
     routing::{get, post},
 };
 
 use crate::controller::ping_handler::ping_handler;
+use crate::middleware::discord_verify::verify_discord_signature;
 
 async fn add_headers(req: Request<Body>, next: Next) -> Response {
     let mut response = next.run(req).await;
@@ -33,10 +35,19 @@ async fn add_headers(req: Request<Body>, next: Next) -> Response {
 }
 
 pub fn get_app() -> Router {
+    // Discord関連のルート（署名検証付き）
+    let discord_routes = Router::new()
+        .route("/webhook", post(ping_handler))
+        .layer(axum_middleware::from_fn(verify_discord_signature));
+
+    // 公開ルート（署名検証なし）
+    let public_routes = Router::new().route("/", get(handler));
+
+    // 統合
     Router::new()
-        .route("/", get(handler))
-        .route("/", post(ping_handler))
-        .layer(middleware::from_fn(add_headers))
+        .nest("/discord", discord_routes)
+        .merge(public_routes)
+        .layer(axum_middleware::from_fn(add_headers))
 }
 
 async fn handler() -> Html<&'static str> {
