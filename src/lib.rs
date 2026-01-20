@@ -1,6 +1,8 @@
 pub mod controller;
 pub mod middleware;
 
+use std::{env, fs};
+
 use axum::{
     Router,
     body::Body,
@@ -10,6 +12,9 @@ use axum::{
     response::Response,
     routing::{get, post},
 };
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use serde_json;
 
 use crate::controller::ping_handler::ping_handler;
 use crate::middleware::discord_verify::verify_discord_signature;
@@ -32,6 +37,38 @@ async fn add_headers(req: Request<Body>, next: Next) -> Response {
     }
 
     response
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct CreateGlobalApplicationCommand {
+    name: String,
+}
+
+pub async fn pre_task() {
+    // slashコマンドを登録
+    let application_id = env::var("DISCORD_APP_ID").unwrap();
+    let token = env::var("DISCORD_TOKEN").unwrap();
+    println!("{application_id}");
+    let url = format!(
+        "https://discord.com/api/v10/applications/{}/commands",
+        application_id
+    );
+    let token = format!("Bot {}", token);
+    println!("{token}");
+    println!("{url}");
+    let request = fs::read_to_string("./src/slash_command.json").unwrap();
+    let client = Client::new();
+    let res = client
+        .put(url)
+        .header(reqwest::header::CONTENT_TYPE, "application/json")
+        .header(reqwest::header::AUTHORIZATION, token)
+        .body(request)
+        .send()
+        .await
+        .unwrap();
+    println!("{}", res.status());
+    println!("{}", res.text().await.unwrap());
+    // .envファイルから環境変数を読み込む
 }
 
 pub fn get_app() -> Router {
