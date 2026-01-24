@@ -1,7 +1,8 @@
+pub mod application;
 pub mod controller;
+pub mod domain;
+pub mod infrastructure;
 pub mod middleware;
-
-use std::{env, fs};
 
 use axum::{
     Router,
@@ -12,12 +13,15 @@ use axum::{
     response::Response,
     routing::{get, post},
 };
-use reqwest::Client;
-use serde::{Deserialize, Serialize};
-use serde_json;
+use tracing::{info, instrument, trace};
+use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::controller::ping_handler::ping_handler;
 use crate::middleware::discord_verify::verify_discord_signature;
+use crate::{
+    application::register_slash_command::RegisterSlashCommnadsUseCase,
+    controller::ping_handler::ping_handler,
+    infrastructure::{config::EnvConfigRepository, discord_client::DiscordApiClient},
+};
 
 async fn add_headers(req: Request<Body>, next: Next) -> Response {
     let mut response = next.run(req).await;
@@ -39,36 +43,36 @@ async fn add_headers(req: Request<Body>, next: Next) -> Response {
     response
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-struct CreateGlobalApplicationCommand {
-    name: String,
+pub fn init_tracing() {
+    let _ = tracing_subscriber::registry()
+        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
+        .with(tracing_subscriber::fmt::layer().with_writer(std::io::stdout))
+        .try_init();
+    info!("log tracing started");
 }
 
-pub async fn pre_task() {
+#[instrument(skip(discord_repo, config_repo))]
+pub async fn pre_task_with_deps<D, C>(discord_repo: D, config_repo: C)
+where
+    D: crate::domain::discord::DiscordRepository + std::fmt::Debug,
+    C: crate::domain::config::ConfigRepository + std::fmt::Debug,
+{
     // slashコマンドを登録
-    let application_id = env::var("DISCORD_APP_ID").unwrap();
-    let token = env::var("DISCORD_TOKEN").unwrap();
-    println!("{application_id}");
-    let url = format!(
-        "https://discord.com/api/v10/applications/{}/commands",
-        application_id
-    );
-    let token = format!("Bot {}", token);
-    println!("{token}");
-    println!("{url}");
-    let request = fs::read_to_string("./src/slash_command.json").unwrap();
-    let client = Client::new();
-    let res = client
-        .put(url)
-        .header(reqwest::header::CONTENT_TYPE, "application/json")
-        .header(reqwest::header::AUTHORIZATION, token)
-        .body(request)
-        .send()
-        .await
-        .unwrap();
-    println!("{}", res.status());
-    println!("{}", res.text().await.unwrap());
-    // .envファイルから環境変数を読み込む
+    let use_case = RegisterSlashCommnadsUseCase::new(discord_repo, config_repo);
+
+    match use_case.execute().await {
+        Ok(_) => info!("finished pre task."),
+        Err(e) => panic!("Pre-task faild: {}", e),
+    }
+}
+
+#[instrument]
+pub async fn pre_task() {
+    // デフォルトの実装を使用
+    let discord_client = DiscordApiClient::new();
+    let config_repo = EnvConfigRepository::new();
+
+    pre_task_with_deps(discord_client, config_repo).await;
 }
 
 pub fn get_app() -> Router {
@@ -88,7 +92,7 @@ pub fn get_app() -> Router {
 }
 
 async fn handler() -> Html<&'static str> {
-    println!("request");
+    trace!("reqested root page");
     Html("<h1>Hello, World!</h1>")
 }
 

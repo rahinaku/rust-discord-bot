@@ -1,8 +1,11 @@
-use api_test::{get_app, pre_task};
+use api_test::{get_app, init_tracing, pre_task};
+use tracing::info;
 
 #[tokio::main]
 async fn main() {
+    init_tracing();
     dotenv::dotenv().ok();
+    info!("envioment variables loaded");
 
     pre_task().await;
 
@@ -11,6 +14,7 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
         .await
         .unwrap();
-    println!("listening on {}", listener.local_addr().unwrap());
+    let listen_addr = listener.local_addr().unwrap().to_string();
+    info!(url = listen_addr, "start listning");
     axum::serve(listener, app).await.unwrap();
 }

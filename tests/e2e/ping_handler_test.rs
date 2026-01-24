@@ -32,7 +32,7 @@ async fn test_ping_handler_type_1_returns_ok() {
     // リクエストを構築
     let request = Request::builder()
         .method("POST")
-        .uri("/discord/webhook")
+        .uri("/discord")
         .header("x-signature-ed25519", signature)
         .header("x-signature-timestamp", timestamp)
         .header("content-type", "application/json")
@@ -77,7 +77,7 @@ async fn test_ping_handler_type_2_returns_bad_request() {
     // リクエストを構築
     let request = Request::builder()
         .method("POST")
-        .uri("/discord/webhook")
+        .uri("/discord")
         .header("x-signature-ed25519", signature)
         .header("x-signature-timestamp", timestamp)
         .header("content-type", "application/json")
@@ -113,7 +113,7 @@ async fn test_ping_handler_without_signature_returns_unauthorized() {
     // リクエストを構築（署名なし）
     let request = Request::builder()
         .method("POST")
-        .uri("/discord/webhook")
+        .uri("/discord")
         .header("content-type", "application/json")
         .body(Body::from(body_str))
         .unwrap();
@@ -146,7 +146,7 @@ async fn test_ping_handler_with_invalid_signature_returns_unauthorized() {
     // リクエストを構築
     let request = Request::builder()
         .method("POST")
-        .uri("/discord/webhook")
+        .uri("/discord")
         .header("x-signature-ed25519", invalid_signature)
         .header("x-signature-timestamp", timestamp)
         .header("content-type", "application/json")
