@@ -6,6 +6,15 @@ IMAGE_TAG := latest
 NAMESPACE := api-test
 RELEASE_NAME := api-test
 CHART_PATH := ./chart
+VALUES_FILE ?=
+HELM_ARGS ?=
+
+# values ファイルが指定されていれば -f オプションを追加
+ifneq ($(VALUES_FILE),)
+  HELM_VALUES := -f $(VALUES_FILE)
+else
+  HELM_VALUES :=
+endif
 
 # Docker ビルド
 build:
@@ -17,11 +26,11 @@ load: build
 
 # Helm インストール
 deploy:
-	helm install $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE)
+	helm install $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE) $(HELM_VALUES) $(HELM_ARGS)
 
 # Helm アップグレード
 upgrade:
-	helm upgrade $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE)
+	helm upgrade $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE) $(HELM_VALUES) $(HELM_ARGS)
 
 # Helm アンインストール
 delete:
@@ -65,3 +74,12 @@ help:
 	@echo "  make status  - ステータス確認"
 	@echo "  make up      - Docker Compose 起動"
 	@echo "  make down    - Docker Compose 停止"
+	@echo ""
+	@echo "Options:"
+	@echo "  VALUES_FILE  - values ファイルを指定"
+	@echo "  HELM_ARGS    - Helm に追加の引数を渡す"
+	@echo ""
+	@echo "Examples:"
+	@echo "  make deploy VALUES_FILE=values-local.yaml"
+	@echo "  make all VALUES_FILE=values-local.yaml"
+	@echo "  make deploy HELM_ARGS=\"--set replicaCount=3\""
