@@ -26,7 +26,7 @@ load: build
 
 # Helm インストール
 deploy:
-	helm install $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE) $(HELM_VALUES) $(HELM_ARGS)
+	helm install $(RELEASE_NAME) $(CHART_PATH) -n $(NAMESPACE) --create-namespace $(HELM_VALUES) $(HELM_ARGS)
 
 # Helm アップグレード
 upgrade:
