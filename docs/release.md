@@ -85,3 +85,21 @@ helm install api-test ./chart -n api-test -f chart/values.yaml -f values-local.y
 ```bash
 helm get values api-test -n api-test --all
 ```
+
+## Service タイプ
+
+| タイプ | アクセス範囲 | 用途 |
+|--------|-------------|------|
+| **ClusterIP** | クラスタ内部のみ | 内部サービス間通信（デフォルト） |
+| **NodePort** | クラスタ外部から `<NodeIP>:<Port>` | 開発・テスト環境 |
+| **LoadBalancer** | 外部ロードバランサー経由 | 本番環境での外部公開 |
+
+### 外部からアクセスする場合
+
+`values-local.yaml` で Service タイプを変更:
+
+```yaml
+service:
+  type: NodePort
+  port: 3000
+```
