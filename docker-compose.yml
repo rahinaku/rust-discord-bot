@@ -1,0 +1,17 @@
+services:
+  api-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: api-test:latest
+    container_name: api-test
+    ports:
+      - "3000:3000"
+    environment:
+      RUST_LOG: info
+      BIND_ADDRESS: "0.0.0.0:3000"
+      DISCORD_TOKEN: ${DISCORD_TOKEN}
+      DISCORD_APP_ID: ${DISCORD_APP_ID}
+      DISCORD_PUBLIC_KEY: ${DISCORD_PUBLIC_KEY}
+      SLASH_COMMAND_PATH: /app/slash_command.json
+    restart: unless-stopped

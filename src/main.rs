@@ -1,4 +1,5 @@
 use api_test::{get_app, init_tracing, pre_task};
+use std::env;
 use tracing::info;
 
 #[tokio::main]
@@ -11,7 +12,8 @@ async fn main() {
 
     let app = get_app();
 
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:3000")
+    let bind_addr = env::var("BIND_ADDRESS").unwrap_or_else(|_| "127.0.0.1:3000".to_string());
+    let listener = tokio::net::TcpListener::bind(&bind_addr)
         .await
         .unwrap();
     let listen_addr = listener.local_addr().unwrap().to_string();

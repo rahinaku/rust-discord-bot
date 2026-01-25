@@ -1,4 +1,4 @@
-use std::{env, fmt::format, fs};
+use std::{env, fs};
 
 use serde::Deserialize;
 use tracing::{info, instrument};
@@ -44,8 +44,9 @@ impl ConfigRepository for EnvConfigRepository {
     fn load_slash_command_definition(
         &self,
     ) -> Result<crate::domain::discord::SlashCommandDefinition, String> {
-        let content = fs::read_to_string("./src/slash_command.json")
-            .map_err(|e| format!("Faild to read slash_command.json: {}", e))?;
+        let path = env::var("SLASH_COMMAND_PATH").unwrap_or_else(|_| "./src/slash_command.json".to_string());
+        let content = fs::read_to_string(&path)
+            .map_err(|e| format!("Failed to read {}: {}", path, e))?;
 
         let json: SlashCommnadJson =
             serde_json::from_str(&content).map_err(|e| format!("Failed to parse JSON: {}", e))?;

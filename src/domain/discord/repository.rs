@@ -1,3 +1,5 @@
+use std::future::Future;
+
 use crate::domain::discord::{ApplicationId, BotToken, SlashCommandDefinition};
 
 pub trait DiscordRepository {

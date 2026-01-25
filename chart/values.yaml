@@ -1,0 +1,30 @@
+namespace: api-test
+
+replicaCount: 1
+
+image:
+  repository: api-test
+  pullPolicy: Never  # ローカルビルドのイメージを使用
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 3000
+
+configMap:
+  RUST_LOG: "info"
+  BIND_ADDRESS: "0.0.0.0:3000"
+  SLASH_COMMAND_PATH: "/app/slash_command.json"
+
+secret:
+  DISCORD_TOKEN: ""
+  DISCORD_APP_ID: ""
+  DISCORD_PUBLIC_KEY: ""
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
