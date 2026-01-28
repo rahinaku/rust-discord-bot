@@ -16,7 +16,7 @@ use axum::{
 use tracing::{info, instrument, trace};
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::middleware::discord_verify::verify_discord_signature;
+use crate::middleware::{discord_verify::verify_discord_signature, request_log::request_log};
 use crate::{
     application::register_slash_command::RegisterSlashCommnadsUseCase,
     controller::ping_handler::ping_handler,
@@ -62,7 +62,7 @@ where
 
     match use_case.execute().await {
         Ok(_) => info!("finished pre task."),
-        Err(e) => panic!("Pre-task faild: {}", e),
+        Err(e) => panic!("Pre-task failed: {}", e),
     }
 }
 
@@ -89,10 +89,11 @@ pub fn get_app() -> Router {
         .nest("/discord", discord_routes)
         .merge(public_routes)
         .layer(axum_middleware::from_fn(add_headers))
+        .layer(axum_middleware::from_fn(request_log))
 }
 
 async fn handler() -> Html<&'static str> {
-    trace!("reqested root page");
+    trace!("requested root page");
     Html("<h1>Hello, World!</h1>")
 }
 
