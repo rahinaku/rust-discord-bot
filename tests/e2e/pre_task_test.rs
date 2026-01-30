@@ -22,7 +22,7 @@ async fn test_pre_task_with_mock_discord_success() {
 
 #[tokio::test]
 #[serial]
-#[should_panic(expected = "Pre-task faild: Mock Discord API error")]
+#[should_panic(expected = "Pre-task failed: Mock Discord API error")]
 async fn test_pre_task_with_mock_discord_failure() {
     // テスト用の環境変数を設定
     let _env = TestEnv::new(); // 環境変数が設定される
