@@ -41,7 +41,10 @@ mod tests {
     fn test_new_with_empty_name() {
         let result = CommandName::new("");
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), DomainError::InvalidCommandName(_)));
+        assert!(matches!(
+            result.unwrap_err(),
+            DomainError::InvalidCommandName(_)
+        ));
     }
 
     #[test]
@@ -57,7 +60,10 @@ mod tests {
         let name = "a".repeat(33);
         let result = CommandName::new(name);
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), DomainError::InvalidCommandName(_)));
+        assert!(matches!(
+            result.unwrap_err(),
+            DomainError::InvalidCommandName(_)
+        ));
     }
 
     #[test]

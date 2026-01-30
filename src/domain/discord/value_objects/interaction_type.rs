@@ -71,7 +71,10 @@ mod tests {
     fn test_from_i32_application_command_auto_complete() {
         let result = InteractionType::from_i32(4);
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), InteractionType::ApplicationCommandAutoComplete);
+        assert_eq!(
+            result.unwrap(),
+            InteractionType::ApplicationCommandAutoComplete
+        );
     }
 
     #[test]
@@ -85,7 +88,10 @@ mod tests {
     fn test_from_i32_invalid() {
         let result = InteractionType::from_i32(0);
         assert!(result.is_err());
-        assert!(matches!(result.unwrap_err(), DomainError::InvalidInteractinType(0)));
+        assert!(matches!(
+            result.unwrap_err(),
+            DomainError::InvalidInteractinType(0)
+        ));
     }
 
     #[test]

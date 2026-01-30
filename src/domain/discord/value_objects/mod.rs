@@ -1,6 +1,7 @@
 pub mod command;
+pub mod command_name;
+pub mod command_option;
 pub mod credentials;
-pub mod interaction;
 pub mod interaction_id;
 pub mod interaction_token;
 pub mod interaction_type;
