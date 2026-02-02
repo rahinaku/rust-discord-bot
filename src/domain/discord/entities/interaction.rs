@@ -3,7 +3,7 @@ use crate::domain::discord::{
     entities::interaction,
     errors::DomainError,
     value_objects::{
-        command_option::CommandOption, interaction_id::InteractionId,
+        command_name::CommandName, command_option::CommandOption, interaction_id::InteractionId,
         interaction_token::InteractionToken, interaction_type::InteractionType,
     },
 };

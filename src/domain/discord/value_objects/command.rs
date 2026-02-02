@@ -1,18 +1,4 @@
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct CommandName(String);
-
-impl CommandName {
-    pub fn new(name: String) -> Result<Self, String> {
-        if name.is_empty() || name.len() > 32 {
-            return Err("Command name must be 1-32 characters".to_string());
-        }
-        Ok(Self(name))
-    }
-
-    pub fn value(&self) -> &str {
-        &self.0
-    }
-}
+use crate::domain::discord::value_objects::command_name::CommandName;
 
 #[derive(Debug, Clone)]
 pub struct CommandDescription(String);
