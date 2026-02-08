@@ -1,4 +1,4 @@
-.PHONY: build load deploy upgrade delete logs status up down help
+.PHONY: build load deploy upgrade delete logs status up down help setup
 
 # 変数
 IMAGE_NAME := api-test
@@ -60,6 +60,12 @@ down:
 
 clog:
 	docker compose logs
+
+# 開発環境セットアップ
+setup:
+	git config core.hooksPath .githooks
+	@echo "Git hooks configured."
+
 # ヘルプ
 help:
 	@echo "Usage:"
@@ -74,6 +80,7 @@ help:
 	@echo "  make status  - ステータス確認"
 	@echo "  make up      - Docker Compose 起動"
 	@echo "  make down    - Docker Compose 停止"
+	@echo "  make setup   - Git hooks を設定"
 	@echo ""
 	@echo "Options:"
 	@echo "  VALUES_FILE  - values ファイルを指定"

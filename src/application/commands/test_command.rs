@@ -1,8 +1,8 @@
 use crate::domain::discord::{entities::interaction::Interaction, errors::DomainError, services::command_executor::{CommandExecutor, CommandResult}};
 
-pub struct TestCommandHandler
+pub struct TestCommandHandler;
 
-impl CommandExecutor for TestCommandHandler{
+impl CommandExecutor for TestCommandHandler {
     fn name(&self)->&str{
         "test"
     }

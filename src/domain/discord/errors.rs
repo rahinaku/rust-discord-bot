@@ -11,6 +11,9 @@ pub enum DomainError {
     #[error("Missing interaction data for type: {0}")]
     MissingInteractionData(i32),
 
+    #[error("Validation error: {0}")]
+    ValidationError(String),
+
     #[error("Unknown command: {0}")]
     UnknownCommand(String),
 }

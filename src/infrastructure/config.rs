@@ -52,10 +52,10 @@ impl ConfigRepository for EnvConfigRepository {
             serde_json::from_str(&content).map_err(|e| format!("Failed to parse JSON: {}", e))?;
 
         // Domain Objectに変換
-        let name = CommandName::new(json.name)?;
+        let name = CommandName::new(json.name).map_err(|e| e.to_string())?;
         let description = CommandDescription::new(json.description)?;
 
-        info!(value = name.value(), "read slash_command.json");
+        info!(value = name.as_str(), "read slash_command.json");
         Ok(SlashCommandDefinition::new(name, description))
     }
 }

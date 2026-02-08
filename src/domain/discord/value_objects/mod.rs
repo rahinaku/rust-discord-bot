@@ -7,4 +7,5 @@ pub mod interaction_token;
 pub mod interaction_type;
 
 pub use command::{CommandDescription, SlashCommandDefinition};
+pub use command_name::CommandName;
 pub use credentials::{ApplicationId, BotToken};

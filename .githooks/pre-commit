@@ -1,0 +1,12 @@
+#!/bin/sh
+
+echo "Running cargo check..."
+cargo check
+
+if [ $? -ne 0 ]; then
+    echo ""
+    echo "cargo check failed. Commit aborted."
+    exit 1
+fi
+
+exit 0

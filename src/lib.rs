@@ -4,6 +4,8 @@ pub mod domain;
 pub mod infrastructure;
 pub mod middleware;
 
+use std::sync::Arc;
+
 use axum::{
     Router,
     body::Body,
@@ -16,10 +18,18 @@ use axum::{
 use tracing::{info, instrument, trace};
 use tracing_subscriber::{EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
 
-use crate::middleware::{discord_verify::verify_discord_signature, request_log::request_log};
 use crate::{
-    application::register_slash_command::RegisterSlashCommnadsUseCase,
-    controller::ping_handler::ping_handler,
+    application::{
+        commands::ping_command::PingCommandHandler, interaction_use_case::InteractionUseCase,
+    },
+    middleware::{discord_verify::verify_discord_signature, request_log::request_log},
+};
+use crate::{
+    application::{
+        commands::test_command::TestCommandHandler,
+        register_slash_command::RegisterSlashCommnadsUseCase,
+    },
+    controller::intraction_handler::interaction_handler,
     infrastructure::{config::EnvConfigRepository, discord_client::DiscordApiClient},
 };
 
@@ -66,6 +76,15 @@ where
     }
 }
 
+pub fn setup_interaction_use_case() -> Arc<InteractionUseCase> {
+    let mut use_case = InteractionUseCase::new();
+
+    use_case.register_command(Box::new(PingCommandHandler));
+    use_case.register_command(Box::new(TestCommandHandler));
+
+    Arc::new(use_case)
+}
+
 #[instrument]
 pub async fn pre_task() {
     // デフォルトの実装を使用
@@ -76,10 +95,12 @@ pub async fn pre_task() {
 }
 
 pub fn get_app() -> Router {
+    let interaction = setup_interaction_use_case();
     // Discord関連のルート（署名検証付き）
     let discord_routes = Router::new()
-        .route("/", post(ping_handler))
-        .layer(axum_middleware::from_fn(verify_discord_signature));
+        .route("/", post(interaction_handler))
+        .layer(axum_middleware::from_fn(verify_discord_signature))
+        .with_state(interaction);
 
     // 公開ルート（署名検証なし）
     let public_routes = Router::new().route("/", get(handler));

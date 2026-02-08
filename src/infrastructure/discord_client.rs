@@ -36,7 +36,7 @@ impl DiscordRepository for DiscordApiClient {
 
         let json_body = serde_json::json!([
             {
-                "name" : commands.name().value(),
+                "name" : commands.name().as_str(),
                 "description" : commands.description().value(),
             }
         ]);

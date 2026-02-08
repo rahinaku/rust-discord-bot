@@ -1,11 +1,10 @@
 use crate::domain::discord::{
-    ApplicationId, CommandName,
-    entities::interaction,
     errors::DomainError,
     value_objects::{
         command_name::CommandName, command_option::CommandOption, interaction_id::InteractionId,
         interaction_token::InteractionToken, interaction_type::InteractionType,
     },
+    ApplicationId,
 };
 
 #[derive(Debug)]
@@ -133,7 +132,7 @@ mod tests {
             let name = create_test_command_name();
             let data = InteractionData::new("123".to_string(), name, vec![]);
 
-            assert_eq!(data.command_name().value(), "test");
+            assert_eq!(data.command_name().as_str(), "test");
             assert!(data.options().is_empty());
         }
 
@@ -142,7 +141,7 @@ mod tests {
             let name = create_test_command_name();
             let data = InteractionData::new("123".to_string(), name, vec![]);
 
-            assert_eq!(data.command_name().value(), "test");
+            assert_eq!(data.command_name().as_str(), "test");
         }
 
         #[test]
@@ -441,7 +440,7 @@ mod tests {
             .unwrap();
 
             assert!(interaction.data().is_some());
-            assert_eq!(interaction.data().unwrap().command_name().value(), "ping");
+            assert_eq!(interaction.data().unwrap().command_name().as_str(), "ping");
         }
 
         #[test]

@@ -46,22 +46,30 @@ mod tests {
         let name = "test_command".to_string();
         let result = CommandName::new(name.clone());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().value(), name);
+        assert_eq!(result.unwrap().as_str(), name);
     }
 
     #[test]
     fn test_command_name_new_with_empty_name() {
+        use crate::domain::discord::errors::DomainError;
         let result = CommandName::new("".to_string());
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Command name must be 1-32 characters");
+        assert!(matches!(
+            result.unwrap_err(),
+            DomainError::InvalidCommandName(_)
+        ));
     }
 
     #[test]
     fn test_command_name_new_with_too_long_name() {
+        use crate::domain::discord::errors::DomainError;
         let name = "a".repeat(33);
         let result = CommandName::new(name);
         assert!(result.is_err());
-        assert_eq!(result.unwrap_err(), "Command name must be 1-32 characters");
+        assert!(matches!(
+            result.unwrap_err(),
+            DomainError::InvalidCommandName(_)
+        ));
     }
 
     #[test]
@@ -69,7 +77,7 @@ mod tests {
         let name = "a".repeat(32);
         let result = CommandName::new(name.clone());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap().value(), name);
+        assert_eq!(result.unwrap().as_str(), name);
     }
 
     #[test]
@@ -110,7 +118,7 @@ mod tests {
 
         let command = SlashCommandDefinition::new(name.clone(), description.clone());
 
-        assert_eq!(command.name().value(), name.value());
+        assert_eq!(command.name().as_str(), name.as_str());
         assert_eq!(command.description().value(), description.value());
     }
 
